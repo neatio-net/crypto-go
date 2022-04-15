@@ -20,7 +20,7 @@ import (
 	"github.com/mndrix/btcutil"
 	"github.com/tyler-smith/go-bip32"
 
-	"github.com/neatlib/crypto-go"
+	"github.com/neatlab/crypto-go"
 )
 
 type addrData struct {
@@ -32,7 +32,6 @@ type addrData struct {
 	Addr     string
 }
 
-// NOTE: atom fundraiser address
 var hdPath string = "m/44'/118'/0'/0/0"
 var hdToAddrTable []addrData
 
@@ -65,8 +64,6 @@ func TestHDToAddr(t *testing.T) {
 		fmt.Println("================================")
 		fmt.Println("ROUND:", i, "MNEMONIC:", d.Mnemonic)
 
-		// master, priv, pub := tylerSmith(seed)
-		// master, priv, pub := btcsuite(seed)
 		master, priv, pub := gocrypto(seed)
 
 		fmt.Printf("\tNODEJS GOLANG\n")
@@ -122,7 +119,6 @@ func btcsuite(seed []byte) ([]byte, []byte, []byte) {
 		curve := btcutil.Secp256k1()
 		curveParams := curve.Params()
 
-		// Split it into our key and chain code
 		keyBytes := intermediary[:32]
 		fmt.Printf("\t%X\n", keyBytes)
 		fmt.Printf("\t%X\n", curveParams.N.Bytes())
@@ -151,7 +147,6 @@ func btcsuite(seed []byte) ([]byte, []byte, []byte) {
 	return mkey.Serialize(), priv, pub
 }
 
-// return priv and pub
 func tylerSmith(seed []byte) ([]byte, []byte, []byte) {
 	masterKey, err := bip32.NewMasterKey(seed)
 	if err != nil {
@@ -162,7 +157,6 @@ func tylerSmith(seed []byte) ([]byte, []byte, []byte) {
 		curve := btcutil.Secp256k1()
 		curveParams := curve.Params()
 
-		// Split it into our key and chain code
 		keyBytes := intermediary[:32]
 		fmt.Printf("\t%X\n", keyBytes)
 		fmt.Printf("\t%X\n", curveParams.N.Bytes())

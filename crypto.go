@@ -15,12 +15,11 @@ func CheckConsensusPubKey(from common.Address, consensusPubkey, signature []byte
 		return errors.New("invalid signature")
 	}
 
-	// Get BLS Public Key
 	var blsPK BLSPubKey
 	copy(blsPK[:], consensusPubkey)
-	// Get BLS Signature
+
 	blsSign := BLSSignature(signature)
-	// Verify the Signature
+
 	success := blsPK.VerifyBytes(from.Bytes(), blsSign)
 	if !success {
 		return errors.New("consensus public key signature verification failed")

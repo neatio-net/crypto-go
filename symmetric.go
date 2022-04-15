@@ -3,16 +3,13 @@ package crypto
 import (
 	"errors"
 
-	. "github.com/neatlib/common-go"
+	. "github.com/neatlab/common-go"
 	"golang.org/x/crypto/nacl/secretbox"
 )
 
 const nonceLen = 24
 const secretLen = 32
 
-// secret must be 32 bytes long. Use something like Sha256(Bcrypt(passphrase))
-// The ciphertext is (secretbox.Overhead + 24) bytes longer than the plaintext.
-// NOTE: call crypto.MixEntropy() first.
 func EncryptSymmetric(plaintext []byte, secret []byte) (ciphertext []byte) {
 	if len(secret) != secretLen {
 		PanicSanity(Fmt("Secret must be 32 bytes long, got len %v", len(secret)))
@@ -28,8 +25,6 @@ func EncryptSymmetric(plaintext []byte, secret []byte) (ciphertext []byte) {
 	return ciphertext
 }
 
-// secret must be 32 bytes long. Use something like Sha256(Bcrypt(passphrase))
-// The ciphertext is (secretbox.Overhead + 24) bytes longer than the plaintext.
 func DecryptSymmetric(ciphertext []byte, secret []byte) (plaintext []byte, err error) {
 	if len(secret) != secretLen {
 		PanicSanity(Fmt("Secret must be 32 bytes long, got len %v", len(secret)))

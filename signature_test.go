@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/neatlab/ed25519"
 	data "github.com/neatlib/data-go"
-	"github.com/neatlib/ed25519-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -18,10 +18,8 @@ func TestSignAndValidateEd25519(t *testing.T) {
 	msg := CRandBytes(128)
 	sig := privKey.Sign(msg)
 
-	// Test the signature
 	assert.True(t, pubKey.VerifyBytes(msg, sig))
 
-	// Mutate the signature, just one bit.
 	sigEd := sig.(SignatureEd25519)
 	sigEd[0] ^= byte(0x01)
 	sig = Signature(sigEd)
@@ -38,7 +36,6 @@ func TestSignAndValidateSecp256k1(t *testing.T) {
 
 	assert.True(t, pubKey.VerifyBytes(msg, sig))
 
-	// Mutate the signature, just one bit.
 	sigEd := sig.(SignatureSecp256k1)
 	sigEd[0] ^= byte(0x01)
 	sig = Signature(sigEd)
@@ -61,20 +58,19 @@ func TestSignatureEncodings(t *testing.T) {
 		},
 		{
 			privKey: PrivKeyS{GenPrivKeySecp256k1()},
-			sigSize: 0, // unknown
+			sigSize: 0,
 			sigType: TypeSecp256k1,
 			sigName: NameSecp256k1,
 		},
 	}
 
 	for _, tc := range cases {
-		// note we embed them from the beginning....
+
 		pubKey := PubKeyS{tc.privKey.PubKey()}
 
 		msg := CRandBytes(128)
 		sig := SignatureS{tc.privKey.Sign(msg)}
 
-		// store as wire
 		bin, err := data.ToWire(sig)
 		require.Nil(t, err, "%+v", err)
 		if tc.sigSize != 0 {
@@ -82,26 +78,22 @@ func TestSignatureEncodings(t *testing.T) {
 		}
 		assert.Equal(t, tc.sigType, bin[0])
 
-		// and back
 		sig2 := SignatureS{}
 		err = data.FromWire(bin, &sig2)
 		require.Nil(t, err, "%+v", err)
 		assert.EqualValues(t, sig, sig2)
 		assert.True(t, pubKey.VerifyBytes(msg, sig2))
 
-		// store as json
 		js, err := data.ToJSON(sig)
 		require.Nil(t, err, "%+v", err)
 		assert.True(t, strings.Contains(string(js), tc.sigName))
 
-		// and back
 		sig3 := SignatureS{}
 		err = data.FromJSON(js, &sig3)
 		require.Nil(t, err, "%+v", err)
 		assert.EqualValues(t, sig, sig3)
 		assert.True(t, pubKey.VerifyBytes(msg, sig3))
 
-		// and make sure we can textify it
 		text, err := data.ToText(sig)
 		require.Nil(t, err, "%+v", err)
 		assert.True(t, strings.HasPrefix(text, tc.sigName))
@@ -111,13 +103,11 @@ func TestSignatureEncodings(t *testing.T) {
 func TestWrapping(t *testing.T) {
 	assert := assert.New(t)
 
-	// construct some basic constructs
 	msg := CRandBytes(128)
 	priv := GenPrivKeyEd25519()
 	pub := priv.PubKey()
 	sig := priv.Sign(msg)
 
-	// do some wrapping
 	pubs := []PubKeyS{
 		WrapPubKey(nil),
 		WrapPubKey(pub),

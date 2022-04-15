@@ -41,7 +41,6 @@ var (
 	pubNameMapper, privNameMapper data.Mapper
 )
 
-// register both public key types with go-data (and thus go-wire)
 func init() {
 	pubNameMapper = data.NewMapper(PubName{}).
 		RegisterImplementation(Foo{}, "foo", 1).
@@ -83,11 +82,8 @@ func (p *PrivName) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-// TestEncodeDemo tries the various strategies to encode the objects
 func TestEncodeDemo(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
-	// assert := assert.New(t)
-	// require := require.New(t)
 
 	cases := []struct {
 		in, out  Greeter
@@ -95,17 +91,13 @@ func TestEncodeDemo(t *testing.T) {
 	}{
 		{PubName{Foo{"pub-foo"}}, &PubName{}, "Foo: pub-foo"},
 		{PubName{Bar{7}}, &PubName{}, "Bar #7"},
-		// Note these fail - if you can figure a solution here, I'll buy you a beer :)
-		// {PrivName{Foo{"priv-foo"}}, &PrivName{}, "Foo: priv-foo"},
-		// {PrivName{Bar{9}}, &PrivName{}, "Bar #9"},
 	}
 
 	for i, tc := range cases {
-		// make sure it is proper to start
+
 		require.Equal(tc.expected, tc.in.Greet())
 		fmt.Println(tc.expected)
 
-		// now, try to encode as binary
 		b, err := data.ToWire(tc.in)
 		if assert.Nil(err, "%d: %#v", i, tc.in) {
 			err := data.FromWire(b, tc.out)
@@ -114,7 +106,6 @@ func TestEncodeDemo(t *testing.T) {
 			}
 		}
 
-		// try to encode it as json
 		j, err := data.ToJSON(tc.in)
 		if assert.Nil(err, "%d: %#v", i, tc.in) {
 			err := data.FromJSON(j, tc.out)

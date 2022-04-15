@@ -1,1 +1,1 @@
-# Crypto Go Library
+# Crypto go library

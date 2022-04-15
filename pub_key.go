@@ -5,17 +5,16 @@ import (
 	"crypto/sha256"
 
 	secp256k1 "github.com/btcsuite/btcd/btcec"
+	. "github.com/neatlab/common-go"
+	"github.com/neatlab/ed25519"
+	"github.com/neatlab/ed25519/extra25519"
 	ethcrypto "github.com/neatlab/neatio/utilities/crypto"
 	"github.com/neatlib/bls-go"
-	. "github.com/neatlib/common-go"
 	"github.com/neatlib/data-go"
-	"github.com/neatlib/ed25519-go"
-	"github.com/neatlib/ed25519-go/extra25519"
 	"github.com/neatlib/wire-go"
 	"golang.org/x/crypto/ripemd160"
 )
 
-// PubKey is part of Account and Validator.
 type PubKey interface {
 	Address() []byte
 	Bytes() []byte
@@ -26,7 +25,6 @@ type PubKey interface {
 
 var pubKeyMapper data.Mapper
 
-// register both public key types with go-data (and thus go-wire)
 func init() {
 	pubKeyMapper = data.NewMapper(PubKeyS{}).
 		RegisterImplementation(PubKeyEd25519{}, NameEd25519, TypeEd25519).
@@ -35,7 +33,6 @@ func init() {
 		RegisterImplementation(BLSPubKey{}, NameBls, TypeBls)
 }
 
-// PubKeyS add json serialization to PubKey
 type PubKeyS struct {
 	PubKey
 }
@@ -68,9 +65,6 @@ func PubKeyFromBytes(pubKeyBytes []byte) (pubKey PubKey, err error) {
 	return
 }
 
-//-------------------------------------
-
-// Implements PubKey
 type PubKeyEd25519 [32]byte
 
 func (pubKey PubKeyEd25519) Address() []byte {
@@ -79,10 +73,9 @@ func (pubKey PubKeyEd25519) Address() []byte {
 	if *err != nil {
 		PanicCrisis(*err)
 	}
-	// append type byte
 	encodedPubkey := append([]byte{TypeEd25519}, w.Bytes()...)
 	hasher := ripemd160.New()
-	hasher.Write(encodedPubkey) // does not error
+	hasher.Write(encodedPubkey)
 	return hasher.Sum(nil)
 }
 
@@ -91,11 +84,9 @@ func (pubKey PubKeyEd25519) Bytes() []byte {
 }
 
 func (pubKey PubKeyEd25519) VerifyBytes(msg []byte, sig_ Signature) bool {
-	// unwrap if needed
 	if wrap, ok := sig_.(SignatureS); ok {
 		sig_ = wrap.Signature
 	}
-	// make sure we use the same algorithm to sign
 	sig, ok := sig_.(SignatureEd25519)
 	if !ok {
 		return false
@@ -116,8 +107,6 @@ func (p *PubKeyEd25519) UnmarshalJSON(enc []byte) error {
 	return err
 }
 
-// For use with golang/crypto/nacl/box
-// If error, returns nil.
 func (pubKey PubKeyEd25519) ToCurve25519() *[32]byte {
 	keyCurve25519, pubKeyBytes := new([32]byte), [32]byte(pubKey)
 	ok := extra25519.PublicKeyToCurve25519(keyCurve25519, &pubKeyBytes)
@@ -131,8 +120,6 @@ func (pubKey PubKeyEd25519) String() string {
 	return Fmt("PubKeyEd25519{%X}", pubKey[:])
 }
 
-// Must return the full bytes in hex.
-// Used for map keying, etc.
 func (pubKey PubKeyEd25519) KeyString() string {
 	return Fmt("%X", pubKey[:])
 }
@@ -145,21 +132,15 @@ func (pubKey PubKeyEd25519) Equals(other PubKey) bool {
 	}
 }
 
-//-------------------------------------
-
-// Implements PubKey.
-// Compressed pubkey (just the x-cord),
-// prefixed with 0x02 or 0x03, depending on the y-cord.
 type PubKeySecp256k1 [33]byte
 
-// Implements Bitcoin style addresses: RIPEMD160(SHA256(pubkey))
 func (pubKey PubKeySecp256k1) Address() []byte {
 	hasherSHA256 := sha256.New()
-	hasherSHA256.Write(pubKey[:]) // does not error
+	hasherSHA256.Write(pubKey[:])
 	sha := hasherSHA256.Sum(nil)
 
 	hasherRIPEMD160 := ripemd160.New()
-	hasherRIPEMD160.Write(sha) // does not error
+	hasherRIPEMD160.Write(sha)
 	return hasherRIPEMD160.Sum(nil)
 }
 
@@ -168,11 +149,9 @@ func (pubKey PubKeySecp256k1) Bytes() []byte {
 }
 
 func (pubKey PubKeySecp256k1) VerifyBytes(msg []byte, sig_ Signature) bool {
-	// unwrap if needed
 	if wrap, ok := sig_.(SignatureS); ok {
 		sig_ = wrap.Signature
 	}
-	// and assert same algorithm to sign and verify
 	sig, ok := sig_.(SignatureSecp256k1)
 	if !ok {
 		return false
@@ -204,8 +183,6 @@ func (pubKey PubKeySecp256k1) String() string {
 	return Fmt("PubKeySecp256k1{%X}", pubKey[:])
 }
 
-// Must return the full bytes in hex.
-// Used for map keying, etc.
 func (pubKey PubKeySecp256k1) KeyString() string {
 	return Fmt("%X", pubKey[:])
 }
@@ -263,111 +240,6 @@ func (p *EthereumPubKey) UnmarshalJSON(enc []byte) error {
 	return err
 }
 
-/*
-//-------------------------------------
-// Implements PubKey.
-type BLSPubKey []byte
-
-func (pubKey BLSPubKey) getElement() *pbc.Element {
-	return pairing.NewG2().SetBytes(pubKey)
-}
-
-func (pubKey BLSPubKey) GetElement() *pbc.Element {
-	return pairing.NewG2().SetBytes(pubKey)
-}
-
-func (pubKey BLSPubKey) Set1() {
-	copy(pubKey, pairing.NewG1().Set1().Bytes())
-}
-
-
-func CreateBLSPubKey() BLSPubKey {
-	pubKey := pairing.NewG2().Rand()
-	return pubKey.Bytes()
-}
-
-func PubKeyMul(l, r BLSPubKey) BLSPubKey {
-	el1 := l.getElement()
-	el2 := r.getElement()
-	rs := pairing.NewG2().Mul(el1, el2)
-	return rs.Bytes()
-}
-
-func (pubKey BLSPubKey) Mul(other PubKey) bool {
-	if otherPub, ok := other.(BLSPubKey); ok {
-		el1 := pubKey.getElement()
-		el2 := otherPub.getElement()
-		rs := pairing.NewG2().Mul(el1, el2)
-		copy(pubKey, rs.Bytes())
-		return true
-	} else {
-		return false
-	}
-}
-
-func (pubKey BLSPubKey) MulWithSet1(other PubKey) bool {
-	if otherPub, ok := other.(BLSPubKey); ok {
-		el1 := pubKey.getElement()
-		el1.Set1()
-		el2 := otherPub.getElement()
-		rs := pairing.NewG2().Mul(el1, el2)
-		copy(pubKey, rs.Bytes())
-		return true
-	} else {
-		return false
-	}
-}
-
-func (pubKey BLSPubKey) Bytes() []byte {
-	return pubKey
-}
-
-func (pubKey BLSPubKey) Address() []byte {
-	hasherSHA256 := sha256.New()
-	hasherSHA256.Write(pubKey[:]) // does not error
-	sha := hasherSHA256.Sum(nil)
-
-	hasherRIPEMD160 := ripemd160.New()
-	hasherRIPEMD160.Write(sha) // does not error
-	return hasherRIPEMD160.Sum(nil)
-}
-
-func (pubKey BLSPubKey) KeyString() string {
-
-	return Fmt("EthPubKey{%X}", pubKey[:])
-}
-
-func (pubKey BLSPubKey) VerifyBytes(msg []byte, sig_ Signature) bool {
-	if otherSign, ok := sig_.(BLSSignature); ok {
-		h := pairing.NewG1().SetFromStringHash(string(msg), sha256.New())
-		temp1 := pairing.NewGT().Pair(h, pubKey.getElement())
-		temp2 := pairing.NewGT().Pair(otherSign.getElement(), g)
-		return temp1.Equals(temp2)
-	} else {
-		return false;
-	}
-}
-
-func (pubKey BLSPubKey) Equals(other PubKey) bool {
-	if otherBLS, ok := other.(BLSPubKey); ok {
-		return pubKey.getElement().Equals(otherBLS.getElement())
-	} else {
-		return false
-	}
-}
-
-func (pubKey BLSPubKey) MarshalJSON() ([]byte, error) {
-
-	return data.Encoder.Marshal(pubKey)
-}
-
-func (p *BLSPubKey) UnmarshalJSON(enc []byte) error {
-	var ref []byte
-	err := data.Encoder.Unmarshal(&ref, enc)
-	copy(*p, ref)
-	return err
-}
-*/
 type BLSPubKey [128]byte
 
 func (pubKey BLSPubKey) getElement() *bls.PublicKey {
@@ -401,11 +273,11 @@ func BLSPubKeyAggregate(pks []*PubKey) *BLSPubKey {
 
 func (pubKey BLSPubKey) Address() []byte {
 	hasherSHA256 := sha256.New()
-	hasherSHA256.Write(pubKey[:]) // does not error
+	hasherSHA256.Write(pubKey[:])
 	sha := hasherSHA256.Sum(nil)
 
 	hasherRIPEMD160 := ripemd160.New()
-	hasherRIPEMD160.Write(sha) // does not error
+	hasherRIPEMD160.Write(sha)
 	return hasherRIPEMD160.Sum(nil)
 }
 

@@ -18,12 +18,11 @@ import (
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil/base58"
-	"github.com/neatlib/crypto-go"
+	"github.com/neatlab/crypto-go"
 	"golang.org/x/crypto/ripemd160"
 )
 
 const (
-	// BIP32 chainpath prefix
 	CHAINPATH_PREFIX_DEPOSIT   = 0
 	CHAINPATH_PREFIX_CHANGE    = 1
 	CHAINPATH_PREFIX_SWEEP     = 2
@@ -79,7 +78,6 @@ func SignMessage(privKey string, message string, compress bool) string {
 	return base64.StdEncoding.EncodeToString(sigbytes)
 }
 
-// returns MPK, Chain, and master secret in hex.
 func ComputeMastersFromSeed(seed string) (string, string, string, string) {
 	secret, chain := I64([]byte("Bitcoin seed"), []byte(seed))
 	pubKeyBytes := PubKeyBytesFromPrivKeyBytes(secret, true)
@@ -93,8 +91,6 @@ func ComputeWIF(coin string, privKey string, compress bool) string {
 func ComputeTxId(rawTxHex string) string {
 	return HexEncode(ReverseBytes(CalcHash256(HexDecode(rawTxHex))))
 }
-
-// Private methods...
 
 func printKeyInfo(privKeyBytes []byte, pubKeyBytes []byte, chain []byte) {
 	if pubKeyBytes == nil {
@@ -113,7 +109,6 @@ func DerivePrivateKeyForPath(privKeyBytes []byte, chain []byte, path string) []b
 	parts := strings.Split(path, "/")
 	for _, part := range parts {
 		prime := part[len(part)-1:] == "'"
-		// prime == private derivation. Otherwise public.
 		if prime {
 			part = part[:len(part)-1]
 		}
@@ -125,7 +120,6 @@ func DerivePrivateKeyForPath(privKeyBytes []byte, chain []byte, path string) []b
 			panic(errors.New("index too large."))
 		}
 		data, chain = DerivePrivateKey(data, chain, uint32(i), prime)
-		//printKeyInfo(data, nil, chain)
 	}
 	return data
 }
@@ -146,7 +140,6 @@ func DerivePublicKeyForPath(pubKeyBytes []byte, chain []byte, path string) []byt
 			panic(errors.New("index too large."))
 		}
 		data, chain = DerivePublicKey(data, chain, uint32(i))
-		//printKeyInfo(nil, data, chain)
 	}
 	return data
 }
@@ -226,7 +219,7 @@ func I64(key []byte, data []byte) ([]byte, []byte) {
 }
 
 func AddrFromPubKeyBytes(coin string, pubKeyBytes []byte) string {
-	prefix := byte(0x00) // TODO Make const or configurable
+	prefix := byte(0x00)
 	h160 := CalcHash160(pubKeyBytes)
 	h160 = append([]byte{prefix}, h160...)
 	checksum := CalcHash256(h160)
@@ -235,7 +228,7 @@ func AddrFromPubKeyBytes(coin string, pubKeyBytes []byte) string {
 }
 
 func WIFFromPrivKeyBytes(coin string, privKeyBytes []byte, compress bool) string {
-	prefix := byte(0x80) // TODO Make const or configurable
+	prefix := byte(0x80)
 	bytes := append([]byte{prefix}, privKeyBytes...)
 	if compress {
 		bytes = append(bytes, byte(1))
@@ -259,23 +252,19 @@ func PubKeyBytesFromPrivKeyBytes(privKeyBytes []byte, compress bool) (pubKeyByte
 	return pub.SerializeUncompressed()
 }
 
-// Calculate the hash of hasher over buf.
 func CalcHash(buf []byte, hasher hash.Hash) []byte {
 	hasher.Write(buf)
 	return hasher.Sum(nil)
 }
 
-// calculate hash160 which is ripemd160(sha256(data))
 func CalcHash160(buf []byte) []byte {
 	return CalcHash(CalcHash(buf, sha256.New()), ripemd160.New())
 }
 
-// calculate hash256 which is sha256(sha256(data))
 func CalcHash256(buf []byte) []byte {
 	return CalcHash(CalcHash(buf, sha256.New()), sha256.New())
 }
 
-// calculate sha512(data)
 func CalcSha512(buf []byte) []byte {
 	return CalcHash(buf, sha512.New())
 }
