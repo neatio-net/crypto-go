@@ -8,7 +8,7 @@ import (
 	"io"
 	"sync"
 
-	. "github.com/neatlab/common-go"
+	. "github.com/neatio-network/common-go"
 )
 
 var gRandInfo *randInfo

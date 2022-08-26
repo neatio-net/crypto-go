@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"io/ioutil"
 
-	. "github.com/neatlab/common-go"
+	. "github.com/neatio-network/common-go"
 	"golang.org/x/crypto/openpgp/armor"
 )
 

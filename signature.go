@@ -7,7 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 
-	. "github.com/neatlab/common-go"
+	. "github.com/neatio-network/common-go"
 	"github.com/neatlib/bls-go"
 	"github.com/neatlib/data-go"
 	"github.com/neatlib/wire-go"

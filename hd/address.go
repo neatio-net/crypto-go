@@ -18,7 +18,7 @@ import (
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil/base58"
-	"github.com/neatlab/crypto-go"
+	"github.com/neatio-network/crypto-go"
 	"golang.org/x/crypto/ripemd160"
 )
 
