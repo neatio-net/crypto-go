@@ -8,9 +8,9 @@ import (
 	"encoding/json"
 
 	. "github.com/neatio-net/common-go"
-	"github.com/neatlib/bls-go"
-	"github.com/neatlib/data-go"
-	"github.com/neatlib/wire-go"
+	"github.com/neatio-net/bls-go"
+	"github.com/neatio-net/data-go"
+	"github.com/neatio-net/wire-go"
 )
 
 type Signature interface {

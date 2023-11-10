@@ -9,9 +9,9 @@ import (
 	"github.com/neatio-net/ed25519"
 	"github.com/neatio-net/ed25519/extra25519"
 	ethcrypto "github.com/neatio-net/neatio/utilities/crypto"
-	"github.com/neatlib/bls-go"
-	"github.com/neatlib/data-go"
-	"github.com/neatlib/wire-go"
+	"github.com/neatio-net/bls-go"
+	"github.com/neatio-net/data-go"
+	"github.com/neatio-net/wire-go"
 	"golang.org/x/crypto/ripemd160"
 )
 

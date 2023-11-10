@@ -6,11 +6,11 @@ import (
 	secp256k1 "github.com/btcsuite/btcd/btcec"
 	. "github.com/neatio-net/common-go"
 	ethcrypto "github.com/neatio-net/neatio/utilities/crypto"
-	"github.com/neatlib/bls-go"
-	"github.com/neatlib/data-go"
-	"github.com/neatlib/ed25519-go"
-	"github.com/neatlib/ed25519-go/extra25519"
-	"github.com/neatlib/wire-go"
+	"github.com/neatio-net/bls-go"
+	"github.com/neatio-net/data-go"
+	"github.com/neatio-net/ed25519-go"
+	"github.com/neatio-net/ed25519-go/extra25519"
+	"github.com/neatio-net/wire-go"
 )
 
 type PrivKey interface {
