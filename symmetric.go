@@ -3,7 +3,7 @@ package crypto
 import (
 	"errors"
 
-	. "github.com/neatio-network/common-go"
+	. "github.com/neatio-net/common-go"
 	"golang.org/x/crypto/nacl/secretbox"
 )
 
